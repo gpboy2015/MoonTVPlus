@@ -7,7 +7,8 @@ import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
-import { Anime4K } from 'anime4k-webgpu';
+import { render as anime4kRender } from 'anime4k-webgpu';
+
 
 import {
   deleteFavorite,
@@ -554,7 +555,7 @@ function PlayPageClient() {
     
     try {
       if (anime4kRef.current) {
-        await anime4kRef.current.destroy();
+        anime4kRef.current.stop?.();
         anime4kRef.current = null;
       }
 
@@ -562,7 +563,9 @@ function PlayPageClient() {
       const canvas = document.createElement('canvas');
       const container = artPlayerRef.current.template.$video.parentElement;
       
-      // 设置canvas样式
+      // 设置canvas尺寸和样式
+      canvas.width = video.videoWidth * 2; // 2倍超分
+      canvas.height = video.videoHeight * 2;
       canvas.style.position = 'absolute';
       canvas.style.top = '0';
       canvas.style.left = '0';
@@ -576,16 +579,42 @@ function PlayPageClient() {
       // 插入canvas到容器
       container.insertBefore(canvas, video);
 
-      // 初始化Anime4K
-      const anime4k = new Anime4K({
-        video: video,
-        canvas: canvas,
-        mode: anime4kModeRef.current as any,
-        sharpness: 1.0,
-      });
+      // 动态导入对应的模式
+      let ModeClass: any;
+      if (anime4kModeRef.current === 'fast') {
+        const { ModeA } = await import('anime4k-webgpu');
+        ModeClass = ModeA;
+      } else if (anime4kModeRef.current === 'balanced') {
+        const { ModeB } = await import('anime4k-webgpu');
+        ModeClass = ModeB;
+      } else {
+        const { ModeC } = await import('anime4k-webgpu');
+        ModeClass = ModeC;
+      }
 
-      await anime4k.init();
-      anime4kRef.current = anime4k;
+      // 使用anime4k-webgpu的render函数
+      const renderConfig: any = {
+        video,
+        canvas,
+        pipelineBuilder: (device: GPUDevice, inputTexture: GPUTexture) => {
+          const mode = new ModeClass({
+            device,
+            inputTexture,
+            nativeDimensions: {
+              width: video.videoWidth,
+              height: video.videoHeight,
+            },
+            targetDimensions: {
+              width: canvas.width,
+              height: canvas.height,
+            },
+          });
+          return [mode];
+        },
+      };
+
+      const controller = await anime4kRender(renderConfig);
+      anime4kRef.current = { controller, canvas };
       
       console.log('Anime4K超分已启用，模式:', anime4kModeRef.current);
       if (artPlayerRef.current) {
@@ -596,6 +625,10 @@ function PlayPageClient() {
       if (artPlayerRef.current) {
         artPlayerRef.current.notice.show = '超分启用失败：' + (err instanceof Error ? err.message : '未知错误');
       }
+      // 恢复video显示
+      if (artPlayerRef.current?.video) {
+        artPlayerRef.current.video.style.display = 'block';
+      }
     }
   };
 
@@ -603,7 +636,14 @@ function PlayPageClient() {
   const cleanupAnime4K = async () => {
     if (anime4kRef.current) {
       try {
-        await anime4kRef.current.destroy();
+        // 停止渲染循环
+        anime4kRef.current.controller?.stop?.();
+        
+        // 移除canvas
+        if (anime4kRef.current.canvas && anime4kRef.current.canvas.parentNode) {
+          anime4kRef.current.canvas.parentNode.removeChild(anime4kRef.current.canvas);
+        }
+        
         anime4kRef.current = null;
         
         // 恢复原始video显示
