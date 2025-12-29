@@ -3310,6 +3310,8 @@ const OpenListConfigComponent = ({
                           )}
                           <button
                             onClick={() => {
+                              console.log('Video object:', video);
+                              console.log('Video poster field:', video.poster);
                               setSelectedVideo(video);
                               setCorrectDialogOpen(true);
                             }}
@@ -3356,6 +3358,17 @@ const OpenListConfigComponent = ({
           onClose={() => setCorrectDialogOpen(false)}
           videoKey={selectedVideo.id}
           currentTitle={selectedVideo.title}
+          currentVideo={{
+            tmdbId: selectedVideo.tmdbId,
+            doubanId: selectedVideo.doubanId,
+            poster: selectedVideo.poster,
+            releaseDate: selectedVideo.releaseDate,
+            overview: selectedVideo.overview,
+            voteAverage: selectedVideo.voteAverage,
+            mediaType: selectedVideo.mediaType,
+            seasonNumber: selectedVideo.seasonNumber,
+            seasonName: selectedVideo.seasonName,
+          }}
           onCorrect={handleCorrectSuccess}
         />
       )}

@@ -216,5 +216,11 @@ export function getTMDBImageUrl(
   size: string = 'w500'
 ): string {
   if (!path) return '';
+
+  // 如果已经是完整的 URL (http:// 或 https://),直接返回
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }
