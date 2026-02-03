@@ -267,7 +267,9 @@ export default function MusicPage() {
             }),
           });
 
-          const data = await parseResponse.json();
+          let data = await parseResponse.json();
+          // 执行前端 transform（如果有）
+          data = executeTransform(data);
 
           if (data.code === 0 && data.data?.data && data.data.data.length > 0) {
             const songData = data.data.data[0];
@@ -357,6 +359,23 @@ export default function MusicPage() {
     }
   }, [playRecords, pendingSongToPlay]);
 
+  // 执行前端 transform（用于 Cloudflare 环境）
+  const executeTransform = (data: any) => {
+    if (data && typeof data === 'object' && data.__transform) {
+      try {
+        // eslint-disable-next-line no-eval
+        const transformFn = eval(`(${data.__transform})`);
+        delete data.__transform; // 删除 transform 字段
+        return transformFn(data);
+      } catch (err) {
+        console.error('[Frontend] Transform 函数执行失败:', err);
+        delete data.__transform;
+        return data;
+      }
+    }
+    return data;
+  };
+
   // 加载排行榜列表
   const loadPlaylists = async (source: string) => {
     setLoading(true);
@@ -364,7 +383,9 @@ export default function MusicPage() {
       const response = await fetch(
         `/api/music?action=toplists&platform=${source}`
       );
-      const data = await response.json();
+      let data = await response.json();
+      // 执行前端 transform（如果有）
+      data = executeTransform(data);
       // 确保返回的是数组
       setPlaylists(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -382,7 +403,9 @@ export default function MusicPage() {
       const response = await fetch(
         `/api/music?action=toplist&platform=${currentSource}&id=${playlistId}`
       );
-      const data = await response.json();
+      let data = await response.json();
+      // 执行前端 transform（如果有）
+      data = executeTransform(data);
       // 确保返回的是数组
       setSongs(Array.isArray(data) ? data : []);
       setCurrentPlaylistTitle(playlistName);
@@ -404,7 +427,9 @@ export default function MusicPage() {
       const response = await fetch(
         `/api/music?action=search&platform=${currentSource}&keyword=${encodeURIComponent(searchKeyword)}&page=1&pageSize=20`
       );
-      const data = await response.json();
+      let data = await response.json();
+      // 执行前端 transform（如果有）
+      data = executeTransform(data);
       // 确保返回的是数组
       setSongs(Array.isArray(data) ? data : []);
       setCurrentPlaylistTitle(`搜索: ${searchKeyword}`);
@@ -743,7 +768,9 @@ export default function MusicPage() {
         }),
       });
 
-      const data = await response.json();
+      let data = await response.json();
+      // 执行前端 transform（如果有）
+      data = executeTransform(data);
 
       // TuneHub 返回格式: { code: 0, data: { data: [...] } }
       if (data.code === 0 && data.data?.data && data.data.data.length > 0) {

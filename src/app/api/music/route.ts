@@ -7,6 +7,9 @@ import { OpenListClient } from '@/lib/openlist.client';
 
 export const runtime = 'nodejs';
 
+// 检测是否为 Cloudflare 环境
+const isCloudflare = process.env.CF_PAGES === '1' || process.env.BUILD_TARGET === 'cloudflare';
+
 // 服务器端内存缓存
 const serverCache = {
   methodConfigs: new Map<string, { data: any; timestamp: number }>(),
@@ -249,11 +252,45 @@ async function executeMethod(
       const expressionRegex = /\{\{(.+?)\}\}/g;
       return value.replace(expressionRegex, (match, expression) => {
         try {
-          // 创建一个函数来执行表达式，传入所有变量作为参数
-          // eslint-disable-next-line no-new-func
-          const func = new Function(...Object.keys(evalContext), `return ${expression}`);
-          const result = func(...Object.values(evalContext));
-          return String(result);
+          // 在 Cloudflare 环境下，使用简单的表达式替换
+          if (isCloudflare) {
+            const expr = expression.trim();
+
+            // 检查是否是单个变量（没有运算符）
+            if (evalContext.hasOwnProperty(expr)) {
+              // 直接返回变量值
+              return String(evalContext[expr]);
+            }
+
+            // 处理包含运算的表达式（如 page - 1）
+            let result: any = expr;
+
+            // 替换变量为其值
+            for (const [key, val] of Object.entries(evalContext)) {
+              const regex = new RegExp(`\\b${key}\\b`, 'g');
+              // 对于数字直接替换，对于字符串需要加引号以便 eval
+              const replacement = typeof val === 'number' ? String(val) : `"${String(val).replace(/"/g, '\\"')}"`;
+              result = result.replace(regex, replacement);
+            }
+
+            // 尝试计算表达式
+            try {
+              // eslint-disable-next-line no-eval
+              result = eval(result);
+            } catch (err) {
+              console.error(`[executeMethod] Cloudflare 环境执行表达式失败: ${expr}`, err);
+              // 如果计算失败，尝试直接返回替换后的结果（去掉可能的引号）
+              result = result.replace(/^["']|["']$/g, '');
+            }
+
+            return String(result);
+          } else {
+            // 在 Node.js 环境下，使用 Function 构造器
+            // eslint-disable-next-line no-new-func
+            const func = new Function(...Object.keys(evalContext), `return ${expression}`);
+            const result = func(...Object.values(evalContext));
+            return String(result);
+          }
         } catch (err) {
           console.error(`[executeMethod] 执行表达式失败: ${expression}`, err);
           return '0'; // 默认值
@@ -312,12 +349,19 @@ async function executeMethod(
 
   // 5. 执行 transform 函数（如果有）
   if (config.transform) {
-    try {
-      // eslint-disable-next-line no-eval
-      const transformFn = eval(`(${config.transform})`);
-      data = transformFn(data);
-    } catch (err) {
-      console.error('[executeMethod] Transform 函数执行失败:', err);
+    // 在 Cloudflare 环境下，将 transform 函数返回给前端执行
+    if (isCloudflare) {
+      // 将 transform 函数字符串附加到响应数据中
+      data.__transform = config.transform;
+    } else {
+      // 在 Node.js 环境下，直接执行 transform
+      try {
+        // eslint-disable-next-line no-eval
+        const transformFn = eval(`(${config.transform})`);
+        data = transformFn(data);
+      } catch (err) {
+        console.error('[executeMethod] Transform 函数执行失败:', err);
+      }
     }
   }
 
