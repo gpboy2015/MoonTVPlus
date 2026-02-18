@@ -55,6 +55,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
             n.id === notificationId ? { ...n, read: true } : n
           )
         );
+        // 触发事件通知 UserMenu 更新未读计数
+        window.dispatchEvent(new Event('notificationsUpdated'));
       }
     } catch (error) {
       console.error('标记已读失败:', error);
@@ -74,7 +76,12 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
       });
 
       if (response.ok) {
+        const deletedNotification = notifications.find((n) => n.id === notificationId);
         setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+        // 如果删除的是未读通知，触发事件更新 UserMenu
+        if (deletedNotification && !deletedNotification.read) {
+          window.dispatchEvent(new Event('notificationsUpdated'));
+        }
       }
     } catch (error) {
       console.error('删除通知失败:', error);
@@ -94,6 +101,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
 
       if (response.ok) {
         setNotifications([]);
+        // 触发事件通知 UserMenu 更新未读计数
+        window.dispatchEvent(new Event('notificationsUpdated'));
       }
     } catch (error) {
       console.error('清空通知失败:', error);
