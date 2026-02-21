@@ -6788,6 +6788,8 @@ const ThemeConfigComponent = ({
             <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
               {[
                 { id: 'renako', name: '玲奈子', url: '/icons/q/renako.png', color: '#ec4899' },
+                { id: 'irena', name: '伊蕾娜', url: '/icons/q/irena.png', color: '#f8fafc' },
+                { id: 'emilia', name: '爱蜜莉雅', url: '/icons/q/emilia.png', color: '#f8fafc' },
               ].map((thumb) => (
                 <button
                   key={thumb.id}
@@ -6830,9 +6832,6 @@ const ThemeConfigComponent = ({
                 </button>
               ))}
             </div>
-            <p className='text-xs text-gray-500 dark:text-gray-400 mt-2'>
-              选择玲奈子图标时，进度条将变为粉色主题
-            </p>
           </div>
         )}
 

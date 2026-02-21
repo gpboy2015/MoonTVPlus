@@ -5830,6 +5830,8 @@ function PlayPageClient() {
             if (config.PROGRESS_THUMB_TYPE === 'preset' && config.PROGRESS_THUMB_PRESET_ID) {
               const presetConfig: Record<string, { url: string; color: string }> = {
                 renako: { url: '/icons/q/renako.png', color: '#ec4899' }, // 粉色
+                irena: { url: '/icons/q/irena.png', color: '#f8fafc' }, // 雪白色
+                emilia: { url: '/icons/q/emilia.png', color: '#f8fafc' }, // 雪白色
               };
               const preset = presetConfig[config.PROGRESS_THUMB_PRESET_ID];
               if (preset) {
