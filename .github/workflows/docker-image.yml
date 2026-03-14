@@ -60,7 +60,7 @@ jobs:
         uses: docker/metadata-action@v5
 
         with:
-          images: ghcr.io/mtvpls/moontvplus
+          images: docker pull ghcr.io/gpboy2015/moontvplus:latest
           tags: |
             type=raw,value=${{ github.event.inputs.tag || 'latest' }},enable={{is_default_branch}}
 
