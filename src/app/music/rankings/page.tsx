@@ -36,19 +36,26 @@ export default function MusicRankingsPage() {
 
   return (
     <div>
-      <div className="mb-5 hidden flex-wrap gap-2 md:flex">
-        {musicSources.map((source) => (
-          <button
-            key={source.key}
-            onClick={() => router.push(`/music/rankings?source=${source.key}`)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-bold ${currentSource === source.key ? 'border-green-500 bg-green-500 text-white' : 'border-white/10 bg-white/5 text-zinc-400'}`}
-          >
-            {source.label}
-          </button>
-        ))}
-      </div>
-      <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-2">
-        <h2 className="text-xs font-mono text-white/50 tracking-widest">排行榜</h2>
+      <div className="mb-6 flex items-center justify-between gap-3 border-b border-white/5 pb-3">
+        <h2 className="shrink-0 text-xs font-mono text-white/50 tracking-widest">排行榜</h2>
+        <div className="flex max-w-[calc(100vw-7rem)] justify-end overflow-x-auto rounded-full border border-white/10 bg-white/[0.04] p-1 shadow-inner shadow-black/20 md:max-w-none md:overflow-visible">
+          {musicSources.map((source) => {
+            const active = currentSource === source.key;
+            return (
+              <button
+                key={source.key}
+                onClick={() => router.push(`/music/rankings?source=${source.key}`)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
+                  active
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-400 text-white shadow-lg shadow-green-500/25'
+                    : 'text-zinc-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {source.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       {loading ? <MusicLoadingIndicator className="py-8" /> : playlists.length > 0 ? (
         <div className="space-y-2">

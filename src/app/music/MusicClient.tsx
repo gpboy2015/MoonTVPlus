@@ -1884,20 +1884,14 @@ export default function MusicClient({ children: _children }: { children?: React.
     }
 
     if (pathname === '/music/search') {
-      const source = normalizeSource(searchParams.get('source') || currentSource);
       const keyword = searchParams.get('q') || '';
-      setCurrentSource(source);
       setCurrentView('search');
       setCurrentPlaylistTitle(keyword ? `搜索: ${keyword}` : '搜索');
       setSearchKeyword(keyword);
-      if (keyword) {
-        void searchSongs(keyword, false);
-      } else {
-        setSongs([]);
-        setActiveSearchKeyword('');
-        setSearchPage(1);
-        setSearchHasMore(false);
-      }
+      setSongs([]);
+      setActiveSearchKeyword('');
+      setSearchPage(1);
+      setSearchHasMore(false);
       return;
     }
 
@@ -2626,48 +2620,6 @@ export default function MusicClient({ children: _children }: { children?: React.
                 </svg>
               </div>
               <span className="font-bold text-lg text-white">音乐</span>
-            </div>
-            <div className="md:hidden relative">
-              <button
-                onClick={() => setShowSourceMenu(true)}
-                className="relative h-10 min-w-[132px] rounded-full border border-white/10 bg-gradient-to-r from-white/8 to-white/4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] px-3"
-              >
-                <div className="absolute inset-0 flex items-center justify-between px-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-full bg-green-500/15 text-green-400 flex items-center justify-center shrink-0">
-                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-[9px] uppercase tracking-[0.18em] text-zinc-500 leading-none">音源</div>
-                      <div className="text-sm font-medium text-white leading-tight truncate">
-                        {musicSources.find((source) => source.key === currentSource)?.label || '酷我'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-7 h-7 rounded-full bg-white/6 border border-white/8 flex items-center justify-center text-zinc-300 shrink-0">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </button>
-            </div>
-            <div className="hidden md:flex flex-wrap bg-white/5 rounded-lg p-1 gap-1 border border-white/5">
-              {musicSources.map((source) => (
-                <button
-                  key={source.key}
-                  onClick={() => switchSource(source.key)}
-                  className={`px-3 py-1 md:px-4 rounded text-[10px] font-bold tracking-wider transition-all ${
-                    currentSource === source.key
-                      ? 'bg-green-500 text-white border border-white/30 shadow-lg shadow-green-500/50'
-                      : 'text-zinc-400 border border-transparent'
-                  }`}
-                >
-                  {source.label}
-                </button>
-              ))}
             </div>
           </div>
         </div>
@@ -3527,61 +3479,6 @@ export default function MusicClient({ children: _children }: { children?: React.
               <span className="text-sm font-medium">返回主页</span>
             </button>
           </aside>
-        </div>
-      )}
-
-      {showSourceMenu && (
-        <div className="md:hidden fixed inset-0 z-[90]">
-          <button
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowSourceMenu(false)}
-            aria-label="关闭音源菜单"
-          />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-3xl border-t border-white/10 bg-zinc-950/98 px-4 pb-6 pt-4 shadow-2xl">
-            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/15" />
-            <div className="mb-3 px-1 text-sm font-medium text-white">切换音源</div>
-            <div className="space-y-2">
-              {musicSources.map((source) => {
-                const active = currentSource === source.key;
-                return (
-                  <button
-                    key={source.key}
-                    onClick={() => {
-                      setShowSourceMenu(false);
-                      if (!active) switchSource(source.key);
-                    }}
-                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-all ${
-                      active
-                        ? 'border-green-500/50 bg-green-500/12 text-white'
-                        : 'border-white/8 bg-white/5 text-zinc-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-9 w-9 items-center justify-center rounded-full ${active ? 'bg-green-500/20 text-green-400' : 'bg-white/8 text-zinc-400'}`}>
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
-                        </svg>
-                      </div>
-                      <div className="text-base font-medium">{source.label}</div>
-                    </div>
-                    {active ? (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    ) : (
-                      <div className="text-zinc-500">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       )}
 
